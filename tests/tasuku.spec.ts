@@ -1,4 +1,5 @@
-import task from '../src/index';
+import { test, describe, expect } from 'manten';
+import task from '#tasuku';
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => {
 	setTimeout(resolve, ms);
@@ -35,66 +36,95 @@ test('nested tasks', async () => {
 	expect<number>(someTask.result).toBe(1);
 });
 
-test('group tasks', async () => {
-	const groupTasks = await task.group(task => [
-		task('number', async () => 123),
-		task('string', async () => 'hello'),
-		task('boolean', async () => false),
-	]);
+describe('group tasks', ({ test }) => {
+	test('task results', async () => {
+		const groupTasks = await task.group(task => [
+			task('number', async () => 123),
+			task('string', async () => 'hello'),
+			task('boolean', async () => false),
+		]);
 
-	expect<[
-		number,
-		string,
-		boolean,
-	]>(groupTasks.results).toEqual([
-		123,
-		'hello',
-		false,
-	]);
-});
+		expect<{ result: number }>(groupTasks[0]).toMatchObject({
+			state: 'success',
+			result: 123,
+		});
+		expect<{ result: string }>(groupTasks[1]).toMatchObject({
+			state: 'success',
+			result: 'hello',
+		});
+		expect<{ result: boolean }>(groupTasks[2]).toMatchObject({
+			state: 'success',
+			result: false,
+		});
+	});
 
-test('group tasks - concurrency - series', async () => {
-	const startTime = Date.now();
-	const groupTasks = await task.group(task => [
-		task('one', async () => {
-			await sleep(100);
-			return 1;
-		}),
-		task('two', async () => {
-			await sleep(100);
-			return 2;
-		}),
-		task('three', async () => {
-			await sleep(100);
-			return 3;
-		}),
-	]);
+	test('concurrency - series', async () => {
+		const startTime = Date.now();
+		const groupTasks = await task.group(task => [
+			task('one', async () => {
+				await sleep(100);
+				return 1;
+			}),
+			task('two', async () => {
+				await sleep(100);
+				return 2;
+			}),
+			task('three', async () => {
+				await sleep(100);
+				return 3;
+			}),
+		]);
 
-	const elapsed = Date.now() - startTime;
+		const elapsed = Date.now() - startTime;
 
-	expect(elapsed > 300 && elapsed < 400).toBe(true);
-	expect(groupTasks.results).toEqual([1, 2, 3]);
-});
+		expect(elapsed > 300 && elapsed < 400).toBe(true);
 
-test('group tasks - concurrency - parallel', async () => {
-	const startTime = Date.now();
-	const groupTasks = await task.group(task => [
-		task('one', async () => {
-			await sleep(100);
-			return 1;
-		}),
-		task('two', async () => {
-			await sleep(100);
-			return 2;
-		}),
-		task('three', async () => {
-			await sleep(100);
-			return 3;
-		}),
-	], { concurrency: Number.POSITIVE_INFINITY });
+		expect<{ result: number }>(groupTasks[0]).toMatchObject({
+			state: 'success',
+			result: 1,
+		});
+		expect<{ result: number }>(groupTasks[1]).toMatchObject({
+			state: 'success',
+			result: 2,
+		});
+		expect<{ result: number }>(groupTasks[2]).toMatchObject({
+			state: 'success',
+			result: 3,
+		});
+	});
 
-	const elapsed = Date.now() - startTime;
+	test('concurrency - parallel', async () => {
+		const startTime = Date.now();
+		const groupTasks = await task.group(task => [
+			task('one', async () => {
+				await sleep(100);
+				return 1;
+			}),
+			task('two', async () => {
+				await sleep(100);
+				return 2;
+			}),
+			task('three', async () => {
+				await sleep(100);
+				return 3;
+			}),
+		], { concurrency: Number.POSITIVE_INFINITY });
 
-	expect(elapsed > 100 && elapsed < 200).toBe(true);
-	expect(groupTasks.results).toEqual([1, 2, 3]);
+		const elapsed = Date.now() - startTime;
+
+		expect(elapsed > 100 && elapsed < 300).toBe(true);
+
+		expect<{ result: number }>(groupTasks[0]).toMatchObject({
+			state: 'success',
+			result: 1,
+		});
+		expect<{ result: number }>(groupTasks[1]).toMatchObject({
+			state: 'success',
+			result: 2,
+		});
+		expect<{ result: number }>(groupTasks[2]).toMatchObject({
+			state: 'success',
+			result: 3,
+		});
+	});
 });

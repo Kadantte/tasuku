@@ -1,8 +1,8 @@
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { TaskList } from 'ink-task-list';
 import { useSnapshot } from 'valtio';
-import type { TaskObject } from '../types';
-import TaskListItem from './TaskListItem';
+import type { TaskObject } from '../types.js';
+import TaskListItem from './TaskListItem.js';
 
 const TaskListApp: FC<{
 	taskList: TaskObject[];
