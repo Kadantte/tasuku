@@ -1,22 +1,89 @@
+import type { Options } from 'p-map';
+
+type State = 'pending' | 'loading' | 'error' | 'warning' | 'success';
+
 export type TaskObject = {
 	title: string;
-	state: 'pending' | 'loading' | 'error' | 'warning' | 'success';
+	state: State;
 	children: TaskObject[];
 	status?: string;
 	output?: string;
-}
+};
 
 export type TaskList = TaskObject[] & {
 	isRoot?: boolean;
-}
+};
 
-// From: https://github.com/microsoft/TypeScript/blob/4f5b3299fee9a54b692aba9df7a9e894bd86e81d/src/lib/es2015.promise.d.ts#L1
-export type Awaited<T> = (
-	T extends undefined
-		? T
-		: (
-			T extends PromiseLike<infer U>
-				? U
-				: T
-		)
-);
+export type TaskInnerAPI = {
+	task: Task;
+	setTitle(title: string): void;
+	setStatus(status?: string): void;
+	setWarning(warning?: Error | string): void;
+	setError(error?: Error | string): void;
+	setOutput(output: string | { message: string }): void;
+};
+
+export type TaskFunction<T> = (innerApi: TaskInnerAPI) => Promise<T>;
+
+export const runSymbol: unique symbol = Symbol('run');
+
+export type RegisteredTask<T = unknown> = {
+	[runSymbol]: () => Promise<T>; // ReturnType<TaskFunction<T>>;
+	task: TaskObject;
+	clear: () => void;
+};
+
+export type TaskAPI<Result = unknown> = {
+	result: Result;
+	state: State;
+	clear: () => void;
+};
+
+export type Task = (
+	<TaskReturnType>(
+
+		/**
+		 * The task title
+		 */
+		title: string,
+
+		/**
+		 * The task function
+		 */
+		taskFunction: TaskFunction<TaskReturnType>
+	) => Promise<TaskAPI<TaskReturnType>>
+) & { group: TaskGroup };
+
+type TaskGroupResults<
+	RegisteredTasks extends RegisteredTask[]
+> = {
+	[Key in keyof RegisteredTasks]: (
+		RegisteredTasks[Key] extends RegisteredTask<infer ReturnType>
+			? TaskAPI<ReturnType>
+			: unknown
+	);
+};
+
+export type TaskGroupAPI<Results = unknown[]> = Results & {
+	clear(): void;
+};
+
+export type CreateTask = <ReturnType>(
+
+	/**
+	 * The task title
+	 */
+	title: string,
+
+	/**
+	 * The task function
+	 */
+	taskFunction: TaskFunction<ReturnType>,
+) => RegisteredTask<ReturnType>;
+
+type TaskGroup = <
+	RegisteredTasks extends RegisteredTask[]
+>(
+	createTasks: (taskCreator: CreateTask) => readonly [...RegisteredTasks],
+	options?: Options
+) => Promise<TaskGroupAPI<TaskGroupResults<RegisteredTasks>>>;

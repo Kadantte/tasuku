@@ -1,9 +1,28 @@
-import React, { FC } from 'react';
+import React, { type FC } from 'react';
 import { Task } from 'ink-task-list';
-import type { TaskObject } from '../types';
+import type { TaskObject } from '../types.js';
+
+type DeepReadonly<T> = { readonly [K in keyof T]: DeepReadonly<T[K]> };
+
+// From: https://github.com/sindresorhus/cli-spinners/blob/00de8fbeee16fa49502fa4f687449f70f2c8ca2c/spinners.json#L2
+const spinner = {
+	interval: 80,
+	frames: [
+		'⠋',
+		'⠙',
+		'⠹',
+		'⠸',
+		'⠼',
+		'⠴',
+		'⠦',
+		'⠧',
+		'⠇',
+		'⠏',
+	],
+};
 
 const TaskListItem: FC<{
-	task: TaskObject;
+	task: DeepReadonly<TaskObject>;
 }> = ({
 	task,
 }) => {
@@ -15,7 +34,7 @@ const TaskListItem: FC<{
 					task={childTask}
 				/>
 			))
-			: undefined
+			: []
 	);
 
 	return (
@@ -23,8 +42,9 @@ const TaskListItem: FC<{
 			state={task.state}
 			label={task.title}
 			status={task.status}
+			spinner={spinner}
 			output={task.output}
-			isExpanded={childTasks?.length > 0}
+			isExpanded={childTasks.length > 0}
 		>
 			{childTasks}
 		</Task>

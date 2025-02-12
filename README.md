@@ -1,4 +1,3 @@
-
 <p align="center">
     <img src=".github/tasuku.svg">
     <br>
@@ -13,7 +12,7 @@
 
 → [Try it out online](https://stackblitz.com/edit/tasuku-demo?file=index.js&devtoolsheight=50&view=editor)
 
-<sub>Support this project by starring and sharing it. [Follow me](https://github.com/privatenumber) to see what other cool projects I'm working on.</sub>
+<sub>Found this package useful? Show your support & appreciation by [sponsoring](https://github.com/sponsors/privatenumber)! ❤️</sub>
 
 ## Install
 ```sh
@@ -26,11 +25,11 @@ npm i tasuku
 For example, here's a simple script that copies a file from path A to B.
 
 ```ts
-import task from 'tasuku'
 import { copyFile } from 'fs/promises'
+import task from 'tasuku'
 
 task('Copying file from path A to B', async ({ setTitle }) => {
-    await copyFile('/path/A', '/path/B');
+    await copyFile('/path/A', '/path/B')
 
     setTitle('Successfully copied file from path A to B!')
 })
@@ -84,11 +83,11 @@ task('Task 1', async () => {
     await someAsyncTask()
 })
 
-...
+// ...
 
 someOtherCode()
 
-...
+// ...
 
 task('Task 2', async ({ setTitle }) => {
     await someAsyncTask()
@@ -169,12 +168,12 @@ const groupedTasks = await task.group(task => [
         setTitle('Task 2 complete')
 
         return 'two'
-    }),
+    })
 
-    ...
+    // ...
 ])
 
-console.log(groupedTasks.results) // ['one', 'two']
+console.log(groupedTasks) // [{ result: 'one' }, { result: 'two' }]
 ```
 
 <img src=".github/example-5.gif">
@@ -186,14 +185,15 @@ You can run tasks in parallel by passing in `{ concurrency: n }` as the second a
 const api = await task.group(task => [
     task(
         'Task 1',
-        async () => await someAsyncTask(),
+        async () => await someAsyncTask()
     ),
-    
+
     task(
         'Task 2',
-        async () => await someAsyncTask(),
-    ),
-    ...
+        async () => await someAsyncTask()
+    )
+
+    // ...
 ], {
     concurrency: 2 // Number of tasks to run at a time
 })
@@ -210,14 +210,15 @@ Alternatively, you can also use the native `Promise.all()` if you prefer. The ad
 await Promise.all([
     task(
         'Task 1',
-        async () => await someAsyncTask(),
+        async () => await someAsyncTask()
     ),
 
     task(
         'Task 2',
-        async () => await someAsyncTask(),
-    ),
-    ...
+        async () => await someAsyncTask()
+    )
+
+    // ...
 ])
 ```
 
@@ -227,12 +228,15 @@ await Promise.all([
 
 Returns a Promise that resolves with object:
 ```ts
-{
-    // The result from taskFunction
-    result: any,
+type TaskAPI = {
+    // Result from taskFunction
+    result: unknown
+
+    // State of the task
+    state: 'error' | 'warning' | 'success'
 
     // Invoke to clear the results from the terminal
-    clear: () => void,
+    clear: () => void
 }
 ```
 
@@ -246,14 +250,14 @@ The name of the task displayed.
 #### taskFunction
 Type:
 ```ts
-({
-    task: taskFunction,
-    setTitle: (title: string) => void,
-    setStatus: (status: string) => void,
-    setOutput: (error: string | { message: string }) => void,
-    setWarning: (warning: Error | string) => void,
-    setError: (error: Error | string) => void,
-}) => Promise<any>
+type TaskFunction = (taskInnerApi: {
+    task: createTask
+    setTitle(title: string): void
+    setStatus(status?: string): void
+    setOutput(output: string | { message: string }): void
+    setWarning(warning: Error | string): void
+    setError(error: Error | string): void
+}) => Promise<unknown>
 ```
 
 Required: true
@@ -285,12 +289,20 @@ Call with a string or Error instance to put the task in an error state. Tasks au
 ### task.group(createTaskFunctions, options)
 Returns a Promise that resolves with object:
 ```ts
-{
-    // The results from the taskFunctions
-    results: any[],
+// The results from the taskFunctions
+type TaskGroupAPI = {
+    // Result from taskFunction
+    result: unknown
 
-    // Invoke to clear the results from the terminal
-    clear: () => void,
+    // State of the task
+    state: 'error' | 'warning' | 'success'
+
+    // Invoke to clear the task result
+    clear: () => void
+}[] & {
+
+    // Invoke to clear ALL results
+    clear: () => void
 }
 ```
 
@@ -339,3 +351,11 @@ Yes, but it should be fine as you don't need access to other `task` functions as
 Put `task` in the allow list:
 - `"no-shadow": ["error", { "allow": ["task"] }]`
 - `"@typescript-eslint/no-shadow": ["error", { "allow": ["task"] }]`
+
+
+## Sponsors
+<p align="center">
+	<a href="https://github.com/sponsors/privatenumber">
+		<img src="https://cdn.jsdelivr.net/gh/privatenumber/sponsors/sponsorkit/sponsors.svg">
+	</a>
+</p>
